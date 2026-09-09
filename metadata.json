@@ -1,0 +1,10 @@
+{
+  "name": "Remix Mahi AI Assistant",
+  "description": "Real-time, voice-to-voice AI assistant created by Karthik Naidu, featuring the witty and charming character Mahi with interactive visual avatar and Gemini Live API.",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
