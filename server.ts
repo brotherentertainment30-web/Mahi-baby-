@@ -193,35 +193,7 @@ wss.on("connection", async (clientWs, req) => {
       },
       callbacks: {
         onopen: () => {
-          isSessionActive = true;
-          console.log("Gemini Live session opened with voice:", voiceName);
-          if (clientWs.readyState === WebSocket.OPEN) {
-            clientWs.send(
-              JSON.stringify({
-                type: "session_ready",
-                voice: voiceName,
-              })
-            );
-          }
-
-          // Trigger Mahi's authentic, warm and playful first greeting
-          try {
-            liveSession.sendClientContent({
-              turns: [
-                {
-                  role: "user",
-                  parts: [
-                    {
-                      text: "Hey Mahi, I just started our call! Say a sweet, warm, playfully teasing hello in your natural voice.",
-                    },
-                  ],
-                },
-              ],
-              turnComplete: true,
-            });
-          } catch (greetErr) {
-            console.warn("Could not send initial greeting trigger:", greetErr);
-          }
+          console.log("Gemini Live session socket opened with voice:", voiceName);
         },
         onmessage: (message: LiveServerMessage) => {
           if (clientWs.readyState !== WebSocket.OPEN) return;
@@ -318,6 +290,47 @@ wss.on("connection", async (clientWs, req) => {
         },
       },
     });
+
+    if (clientWs.readyState !== WebSocket.OPEN) {
+      console.log("Client disconnected before session completed setup");
+      try {
+        liveSession?.close();
+      } catch (e) {
+        // ignore
+      }
+      return;
+    }
+
+    isSessionActive = true;
+    console.log("Gemini Live session ready and setup complete with voice:", voiceName);
+
+    clientWs.send(
+      JSON.stringify({
+        type: "session_ready",
+        voice: voiceName,
+      })
+    );
+
+    // Trigger Mahi's authentic, warm and playful first greeting
+    if (liveSession) {
+      try {
+        liveSession.sendClientContent({
+          turns: [
+            {
+              role: "user",
+              parts: [
+                {
+                  text: "Hey Mahi, I just started our call! Say a sweet, warm, playfully teasing hello in your natural voice.",
+                },
+              ],
+            },
+          ],
+          turnComplete: true,
+        });
+      } catch (greetErr) {
+        console.warn("Could not send initial greeting trigger:", greetErr);
+      }
+    }
 
     // Handle messages from client browser
     clientWs.on("message", (raw) => {
